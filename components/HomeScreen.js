@@ -6,7 +6,7 @@ export default function HomeScreen() {
     const [searchType, setSearchType] = useState('');
     const [releaseYear, setReleaseYear] = useState('');
     const [movies, setMovies] = useState([]);
-    const [showOptions, setShowOptions] = useState(false); // State to control dropdown visibility
+    const [showOptions, setShowOptions] = useState(false);
 
     const API_KEY = process.env.EXPO_PUBLIC_API_KEY;
 
@@ -47,7 +47,7 @@ export default function HomeScreen() {
     };
 
     const toggleOptions = () => {
-        setShowOptions((prev) => !prev); // Toggle dropdown visibility
+        setShowOptions((prev) => !prev);
     };
 
     return (
