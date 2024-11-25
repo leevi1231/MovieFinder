@@ -20,7 +20,10 @@ export default function AuthenticationScreen({ onAuthenticated }) {
                 CREATE TABLE users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     username TEXT UNIQUE,
-                    password TEXT
+                    password TEXT,
+                    display_name TEXT,
+                    bio TEXT,
+                    profile_picture TEXT
                 );
                 CREATE TABLE liked_movies (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
