@@ -6,7 +6,7 @@ import { useFocusEffect } from '@react-navigation/native';
 
 const db = SQLite.openDatabaseSync('users.db');
 
-export default function Profile({ currentUser }) {
+export default function Profile({ currentUser, onLogout, isOwnProfile }) {
     const [likedMovies, setLikedMovies] = useState([]);
     const [displayName, setDisplayName] = useState('');
     const [bio, setBio] = useState('');
@@ -58,7 +58,7 @@ export default function Profile({ currentUser }) {
 
     const handlePickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            mediaTypes: ImagePicker.MediaType,
             allowsEditing: true,
             aspect: [1, 1],
             quality: 0.5,
@@ -75,13 +75,26 @@ export default function Profile({ currentUser }) {
 
     return (
         <View style={styles.container}>
-            <TouchableOpacity onPress={handlePickImage}>
+            <TouchableOpacity onPress={onLogout} style={styles.logoutButton}>
+                <Text style={styles.logoutText}>{isOwnProfile ? 'Logout' : 'Go Back'}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={handlePickImage} disabled={!isEditing}>
                 <Image
                     source={profilePicture ? { uri: profilePicture } : require('./../assets/default-avatar.png')}
                     style={styles.profilePicture}
                 />
             </TouchableOpacity>
-            <Text style={styles.displayName}>{displayName || 'Display Name'}</Text>
+            {!isEditing ? (
+                <Text style={styles.displayName}>{displayName || 'Display Name'}</Text>
+            ) : (
+                <TextInput
+                    style={styles.input}
+                    placeholder="Display Name"
+                    value={displayName}
+                    onChangeText={setDisplayName}
+                />
+            )}
             <Text style={styles.username}>@{currentUser.username}</Text>
             {!isEditing ? (
                 <Text style={styles.bio}>{bio || 'Bio'}</Text>
@@ -94,18 +107,17 @@ export default function Profile({ currentUser }) {
                     multiline
                 />
             )}
-            {isEditing && (
-                <TextInput
-                    style={styles.input}
-                    placeholder="Display Name"
-                    value={displayName}
-                    onChangeText={setDisplayName}
-                />
+            
+            {isOwnProfile && (
+                <Button title={isEditing ? "Save Profile" : "Edit Profile"} onPress={() => {
+                    if (isEditing) {
+                        handleSaveProfile();
+                    } else {
+                        setIsEditing(true);
+                    }
+                }} />
             )}
-            <Button
-                title={isEditing ? 'Save Profile' : 'Edit Profile'}
-                onPress={isEditing ? handleSaveProfile : () => setIsEditing(true)}
-            />
+            
             <Text style={styles.sectionTitle}>Liked Movies:</Text>
             <FlatList
                 data={likedMovies}
@@ -125,43 +137,50 @@ export default function Profile({ currentUser }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        alignItems: 'center',
         padding: 20,
         backgroundColor: '#fff',
+    },
+    logoutButton: {
+        position: 'absolute',
+        top: 20,
+        left: 20,
+        padding: 10,
+        backgroundColor: '#007BFF',
+        borderRadius: 5,
+    },
+    logoutText: {
+        color: '#fff',
+        fontSize: 16,
     },
     profilePicture: {
         width: 100,
         height: 100,
         borderRadius: 50,
-        alignSelf: 'center',
-        marginBottom: 10,
     },
     displayName: {
-        fontSize: 22,
+        fontSize: 24,
         fontWeight: 'bold',
-        textAlign: 'center',
-        marginBottom: 5,
     },
     username: {
-        fontSize: 16,
-        color: 'gray',
-        textAlign: 'center',
-        marginBottom: 10,
+        fontSize: 18,
+        color: '#888',
     },
     bio: {
-        fontSize: 14,
-        textAlign: 'center',
-        marginBottom: 20,
-        color: '#555',
+        fontSize: 16,
+        color: '#666',
+        marginVertical: 10,
+    },
+    bioInput: {
+        minHeight: 80,
     },
     input: {
         borderWidth: 1,
         borderColor: '#ccc',
-        borderRadius: 5,
         padding: 10,
+        width: '100%',
         marginBottom: 10,
-    },
-    bioInput: {
-        height: 80,
+        borderRadius: 5,
     },
     sectionTitle: {
         fontSize: 18,
@@ -172,12 +191,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 10,
     },
+    movieTitle: {
+        fontWeight: 'bold',
+    },
     poster: {
         width: 50,
         height: 75,
         marginRight: 10,
-    },
-    movieTitle: {
-        fontSize: 16,
     },
 });

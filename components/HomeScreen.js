@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, TextInput, Button, FlatList, Text, Alert, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import * as SQLite from 'expo-sqlite';
+
+const db = SQLite.openDatabaseSync('users.db');
 
 export default function HomeScreen({ currentUser }) {
     const [searchQuery, setSearchQuery] = useState('');
@@ -8,28 +10,9 @@ export default function HomeScreen({ currentUser }) {
     const [releaseYear, setReleaseYear] = useState('');
     const [movies, setMovies] = useState([]);
     const [showOptions, setShowOptions] = useState(false);
-    const [db, setDb] = useState(null);
-
+    
     const API_KEY = process.env.EXPO_PUBLIC_API_KEY;
-
-    useEffect(() => {
-        const initializeDatabase = async () => {
-            const database = await SQLite.openDatabaseAsync('users.db');
-            setDb(database);
-            await database.execAsync(`
-                CREATE TABLE IF NOT EXISTS liked_movies (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    imdbID TEXT UNIQUE,
-                    title TEXT,
-                    year TEXT,
-                    poster TEXT,
-                    user_id INTEGER
-                );
-            `);
-        };
-        initializeDatabase();
-    }, []);
-
+    
     const searchMovies = async () => {
         if (searchQuery.trim() === '') {
             Alert.alert('Please enter a movie or series name.');
@@ -56,13 +39,14 @@ export default function HomeScreen({ currentUser }) {
             Alert.alert('Error', 'User is not logged in.');
             return;
         }
-
+    
         try {
             const result = await db.runAsync(
-                `INSERT OR IGNORE INTO liked_movies (imdbID, title, year, poster, user_id) VALUES (?, ?, ?, ?, ?)`,
-                [movie.imdbID, movie.Title, movie.Year, movie.Poster, currentUser.id]
+                `INSERT OR IGNORE INTO liked_movies (user_id, imdbID, title, year, poster) 
+                 VALUES (?, ?, ?, ?, ?)`,
+                [currentUser.id, movie.imdbID, movie.Title, movie.Year, movie.Poster]
             );
-
+    
             if (result.changes > 0) {
                 Alert.alert('Success', 'Movie added to your liked list!');
             } else {
@@ -71,7 +55,7 @@ export default function HomeScreen({ currentUser }) {
         } catch (error) {
             Alert.alert('Error', 'Failed to like movie.');
         }
-    };
+    };    
 
     const renderMovieItem = ({ item }) => (
         <View style={styles.movieItem}>

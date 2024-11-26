@@ -15,9 +15,7 @@ export default function AuthenticationScreen({ onAuthenticated }) {
                 setDb(database);
 
                 await database.execAsync(`
-                DROP TABLE users;
-                DROP TABLE liked_movies;
-                CREATE TABLE users (
+                CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     username TEXT UNIQUE,
                     password TEXT,
@@ -25,14 +23,15 @@ export default function AuthenticationScreen({ onAuthenticated }) {
                     bio TEXT,
                     profile_picture TEXT
                 );
-                CREATE TABLE liked_movies (
+                CREATE TABLE IF NOT EXISTS liked_movies (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER,
-                    imdbID TEXT UNIQUE,
+                    imdbID TEXT,
                     title TEXT,
                     year TEXT,
                     poster TEXT,
-                    FOREIGN KEY (user_id) REFERENCES users (id)
+                    FOREIGN KEY (user_id) REFERENCES users (id),
+                    UNIQUE(user_id, imdbID)
                 );
         `);
             } catch (error) {

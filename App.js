@@ -5,6 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import AuthenticationScreen from './components/AuthenticationScreen';
 import HomeScreen from './components/HomeScreen';
 import Profile from './components/Profile';
+import Explore from './components/Explore';
 
 const Tab = createBottomTabNavigator();
 
@@ -15,6 +16,11 @@ export default function App() {
     const handleAuthenticated = (user) => {
         setIsAuthenticated(true);
         setCurrentUser(user);
+    };
+
+    const handleLogout = () => {
+        setIsAuthenticated(false);
+        setCurrentUser(null);
     };
 
     if (!isAuthenticated) {
@@ -37,13 +43,13 @@ export default function App() {
                     {() => <HomeScreen currentUser={currentUser} />}
                 </Tab.Screen>
                 <Tab.Screen name="Profile">
-                    {() => <Profile currentUser={currentUser} />}
+                    {() => <Profile currentUser={currentUser} isOwnProfile={true} onLogout={handleLogout} />}
                 </Tab.Screen>
+                <Tab.Screen name="Explore" component={Explore} />
             </Tab.Navigator>
         </NavigationContainer>
-    );
+    );    
 }
-
 
 const styles = StyleSheet.create({
     tabBar: {
