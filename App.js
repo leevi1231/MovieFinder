@@ -3,7 +3,7 @@ import { SafeAreaView, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import AuthenticationScreen from './components/AuthenticationScreen';
-import HomeScreen from './components/HomeScreen';
+import Search from './components/Search';
 import Profile from './components/Profile';
 import Explore from './components/Explore';
 
@@ -34,21 +34,22 @@ export default function App() {
     return (
         <NavigationContainer>
             <Tab.Navigator
+                initialRouteName="Explore"
                 screenOptions={{
                     headerShown: false,
                     tabBarStyle: styles.tabBar,
                 }}
             >
-                <Tab.Screen name="Home">
-                    {() => <HomeScreen currentUser={currentUser} />}
+                <Tab.Screen name="Explore" component={Explore} />
+                <Tab.Screen name="Search">
+                    {() => <Search currentUser={currentUser} />}
                 </Tab.Screen>
                 <Tab.Screen name="Profile">
                     {() => <Profile currentUser={currentUser} isOwnProfile={true} onLogout={handleLogout} />}
                 </Tab.Screen>
-                <Tab.Screen name="Explore" component={Explore} />
             </Tab.Navigator>
         </NavigationContainer>
-    );    
+    );
 }
 
 const styles = StyleSheet.create({

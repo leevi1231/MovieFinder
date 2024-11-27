@@ -67,8 +67,8 @@ export default function Explore() {
 
     const renderMovieItem = ({ item }) => (
         <View style={styles.movieItem}>
-            <Text>{item.title}</Text>
-            <Text>{item.likes} likes</Text>
+            <Text style={styles.movieTitle}>{item.title}</Text>
+            <Text style={styles.likes}>Likes: {item.likes}</Text>
         </View>
     );
 
@@ -104,6 +104,7 @@ export default function Explore() {
 
 const styles = StyleSheet.create({
     container: {
+        marginTop: 20,
         flex: 1,
         padding: 20,
         backgroundColor: '#fff',
@@ -131,5 +132,13 @@ const styles = StyleSheet.create({
         padding: 10,
         borderBottomWidth: 1,
         borderBottomColor: '#ccc',
+    },
+    movieTitle: {
+        fontWeight: 'bold',
+        fontSize: 16,
+    },
+    likes: {
+        fontSize: 14,
+        color: '#555',
     },
 });
