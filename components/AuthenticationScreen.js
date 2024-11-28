@@ -15,25 +15,28 @@ export default function AuthenticationScreen({ onAuthenticated }) {
                 setDb(database);
 
                 await database.execAsync(`
-                CREATE TABLE IF NOT EXISTS users (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    username TEXT UNIQUE,
-                    password TEXT,
-                    display_name TEXT,
-                    bio TEXT,
-                    profile_picture TEXT
-                );
-                CREATE TABLE IF NOT EXISTS liked_movies (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user_id INTEGER,
-                    imdbID TEXT,
-                    title TEXT,
-                    year TEXT,
-                    poster TEXT,
-                    FOREIGN KEY (user_id) REFERENCES users (id),
-                    UNIQUE(user_id, imdbID)
-                );
-        `);
+                    CREATE TABLE IF NOT EXISTS users (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        username TEXT UNIQUE,
+                        password TEXT,
+                        display_name TEXT,
+                        bio TEXT,
+                        profile_picture TEXT
+                    );
+                    CREATE TABLE IF NOT EXISTS rated_movies (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        user_id INTEGER,
+                        imdbID TEXT,
+                        title TEXT,
+                        year TEXT,
+                        poster TEXT,
+                        rating REAL CHECK(rating >= 1.0 AND rating <= 5.0 AND (rating * 2) = ROUND(rating * 2)),
+                        review TEXT,
+                        FOREIGN KEY (user_id) REFERENCES users (id),
+                        UNIQUE(user_id, imdbID)
+                    );
+                `);
+
             } catch (error) {
                 console.error('Error initializing database:', error);
             }

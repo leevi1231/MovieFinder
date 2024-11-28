@@ -3,11 +3,12 @@ import { View, Text, TextInput, Button, Image, FlatList, StyleSheet, TouchableOp
 import * as SQLite from 'expo-sqlite';
 import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
 const db = SQLite.openDatabaseSync('users.db');
 
 export default function Profile({ currentUser, onLogout, isOwnProfile }) {
-    const [likedMovies, setLikedMovies] = useState([]);
+    const [ratedMovies, setRatedMovies] = useState([]);
     const [displayName, setDisplayName] = useState('');
     const [bio, setBio] = useState('');
     const [profilePicture, setProfilePicture] = useState(null);
@@ -28,11 +29,11 @@ export default function Profile({ currentUser, onLogout, isOwnProfile }) {
                         setProfilePicture(profile_picture || null);
                     }
 
-                    const movieResults = await db.getAllAsync(
-                        'SELECT title, year, poster, id FROM liked_movies WHERE user_id = ?;',
+                    const ratedMoviesResult = await db.getAllAsync(
+                        'SELECT title, year, poster, rating, review, imdbID, id FROM rated_movies WHERE user_id = ?;',
                         [currentUser.id]
                     );
-                    setLikedMovies(movieResults);
+                    setRatedMovies(ratedMoviesResult);
                 } catch (error) {
                     console.error('Error fetching profile data:', error);
                 }
@@ -69,20 +70,39 @@ export default function Profile({ currentUser, onLogout, isOwnProfile }) {
         }
     };
 
-    const handleRemoveMovie = async (movieId) => {
+    const handleRemoveRating = async (movieId) => {
         try {
-            await db.runAsync('DELETE FROM liked_movies WHERE id = ? AND user_id = ?;', [movieId, currentUser.id]);
-            setLikedMovies((prevMovies) => prevMovies.filter((movie) => movie.id !== movieId));
-            Alert.alert('Success', 'Movie removed from liked list.');
+            await db.runAsync('DELETE FROM rated_movies WHERE id = ? AND user_id = ?;', [movieId, currentUser.id]);
+            setRatedMovies((prevMovies) => prevMovies.filter((movie) => movie.id !== movieId));
+            Alert.alert('Success', 'Rating removed.');
         } catch (error) {
-            console.error('Error removing movie:', error);
-            Alert.alert('Error', 'Failed to remove movie.');
+            console.error('Error removing rating:', error);
+            Alert.alert('Error', 'Failed to remove rating.');
         }
     };
 
     const handleRemoveImage = () => {
         setProfilePicture(null);
     };
+
+    const renderRatingStars = (rating) => {
+        const fullStars = Math.floor(rating);
+        const halfStar = rating % 1 >= 0.5 ? 1 : 0;
+        const emptyStars = 5 - fullStars - halfStar;
+    
+        return (
+            <View style={styles.stars}>
+                {Array(fullStars).fill().map((_, index) => (
+                    <Ionicons key={`full-${index}`} name="star" size={18} color="#FFD700" />
+                ))}
+                {halfStar === 1 && <Ionicons name="star-half" size={18} color="#FFD700" />}
+                {Array(emptyStars).fill().map((_, index) => (
+                    <Ionicons key={`empty-${index}`} name="star-outline" size={18} color="#FFD700" />
+                ))}
+            </View>
+        );
+    };
+    
 
     return (
         <View style={styles.container}>
@@ -97,7 +117,7 @@ export default function Profile({ currentUser, onLogout, isOwnProfile }) {
                 />
             </TouchableOpacity>
             {!isEditing ? (
-                <Text style={styles.displayName}>{displayName || 'Display Name'}</Text>
+                <Text style={styles.displayName}>{displayName || ''}</Text>
             ) : (
                 <TextInput
                     style={styles.input}
@@ -108,7 +128,7 @@ export default function Profile({ currentUser, onLogout, isOwnProfile }) {
             )}
             <Text style={styles.username}>@{currentUser.username}</Text>
             {!isEditing ? (
-                <Text style={styles.bio}>{bio || 'Bio'}</Text>
+                <Text style={styles.bio}>{bio || ''}</Text>
             ) : (
                 <TextInput
                     style={[styles.input, styles.bioInput]}
@@ -129,24 +149,26 @@ export default function Profile({ currentUser, onLogout, isOwnProfile }) {
                 }} />
             )}
             
-            <Text style={styles.sectionTitle}>Liked Movies:</Text>
+            <Text style={styles.sectionTitle}>Rated Movies:</Text>
             <FlatList
-                data={likedMovies}
+                data={ratedMovies}
                 renderItem={({ item }) => (
                     <View style={styles.movieItem}>
                         <Image source={{ uri: item.poster }} style={styles.poster} />
                         <View style={styles.movieDetails}>
                             <Text style={styles.movieTitle}>{item.title}</Text>
                             <Text>{item.year}</Text>
+                            {renderRatingStars(item.rating)}
+                            {item.review && <Text style={styles.reviewText}>Review: {item.review}</Text>}
                         </View>
                         {isOwnProfile && (
-                            <TouchableOpacity onPress={() => handleRemoveMovie(item.id)} style={styles.removeButton}>
-                                <Text style={styles.removeButtonText}>Remove</Text>
+                            <TouchableOpacity onPress={() => handleRemoveRating(item.id)} style={styles.removeButton}>
+                                <Text style={styles.removeButtonText}>Remove Rating</Text>
                             </TouchableOpacity>
                         )}
                     </View>
                 )}
-                keyExtractor={(item, index) => index.toString()}
+                keyExtractor={(item) => item.id.toString()}
             />
         </View>
     );
@@ -222,5 +244,13 @@ const styles = StyleSheet.create({
     },
     removeButtonText: {
         color: '#fff',
+    },
+    reviewText: {
+        fontStyle: 'italic',
+        color: '#666',
+    },
+    stars: {
+        flexDirection: 'row',
+        fontSize: 18,
     },
 });

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, Button, FlatList, Text, Alert, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TextInput, Button, FlatList, Text, Alert, Image, TouchableOpacity, Modal, StyleSheet } from 'react-native';
 import * as SQLite from 'expo-sqlite';
 import { Ionicons } from '@expo/vector-icons';
+import Slider from '@react-native-community/slider';
 
 const db = SQLite.openDatabaseSync('users.db');
 
@@ -12,6 +13,10 @@ export default function Search({ currentUser }) {
     const [movies, setMovies] = useState([]);
     const [expandedMovies, setExpandedMovies] = useState({});
     const [showOptions, setShowOptions] = useState(false);
+    const [ratingModalVisible, setRatingModalVisible] = useState(false);
+    const [selectedMovie, setSelectedMovie] = useState(null);
+    const [selectedRating, setSelectedRating] = useState(5);
+    const [review, setReview] = useState('');
 
     const API_KEY = process.env.EXPO_PUBLIC_API_KEY;
 
@@ -36,29 +41,36 @@ export default function Search({ currentUser }) {
         }
     };
 
-    const addMovieToLiked = async (movie) => {
+    const addMovieToRatings = async () => {
         if (!currentUser || !currentUser.id) {
             Alert.alert('Error', 'User is not logged in.');
+            return;
+        }
+        if (selectedRating === null) {
+            Alert.alert('Error', 'Please select a rating.');
             return;
         }
 
         try {
             const result = await db.runAsync(
-                `INSERT OR IGNORE INTO liked_movies (user_id, imdbID, title, year, poster) 
-                 VALUES (?, ?, ?, ?, ?)`,
-                [currentUser.id, movie.imdbID, movie.Title, movie.Year, movie.Poster]
+                `INSERT OR IGNORE INTO rated_movies (user_id, imdbID, title, year, poster, rating, review) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                [currentUser.id, selectedMovie.imdbID, selectedMovie.Title, selectedMovie.Year, selectedMovie.Poster, selectedRating, review]
             );
 
             if (result.changes > 0) {
-                Alert.alert('Success', 'Movie added to your liked list!');
+                Alert.alert('Success', 'Movie added to your rated movies!');
             } else {
-                Alert.alert('Info', 'You have already liked this movie.');
+                Alert.alert('Info', 'You have already rated this movie.');
             }
+            setRatingModalVisible(false);
+            setSelectedMovie(null);
+            setSelectedRating(5);
+            setReview('');
         } catch (error) {
-            Alert.alert('Error', 'Failed to add movie to liked list.');
+            Alert.alert('Error', 'Failed to add movie to ratings.');
         }
     };
-
 
     const fetchMovieDetails = async (imdbID) => {
         try {
@@ -95,7 +107,10 @@ export default function Search({ currentUser }) {
                 </View>
                 <TouchableOpacity
                     style={styles.addButton}
-                    onPress={() => addMovieToLiked(item)}
+                    onPress={() => {
+                        setSelectedMovie(item);
+                        setRatingModalVisible(true);
+                    }}
                 >
                     <Ionicons name="add" size={24} color="gray" />
                 </TouchableOpacity>
@@ -165,6 +180,40 @@ export default function Search({ currentUser }) {
                 renderItem={renderMovieItem}
                 keyExtractor={(item) => item.imdbID}
             />
+
+            <Modal
+                animationType="none"
+                transparent={true}
+                visible={ratingModalVisible}
+                onRequestClose={() => setRatingModalVisible(false)}
+            >
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Rate Movie</Text>
+                        <Slider
+                            style={styles.ratingSlider}
+                            minimumValue={0}
+                            maximumValue={5}
+                            step={0.5}
+                            value={selectedRating}
+                            onValueChange={(value) => setSelectedRating(value)}
+                            minimumTrackTintColor="#007BFF"
+                            maximumTrackTintColor="#d3d3d3"
+                            thumbTintColor="#007BFF"
+                        />
+                        <Text style={styles.selectedRatingText}>{selectedRating} ★</Text>
+                        <TextInput
+                            style={styles.reviewInput}
+                            placeholder="Write a short review (optional)"
+                            value={review}
+                            onChangeText={setReview}
+                            multiline
+                        />
+                        <Button title="Submit Rating" onPress={addMovieToRatings} />
+                        <Button title="Cancel" onPress={() => setRatingModalVisible(false)} />
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -184,9 +233,15 @@ const styles = StyleSheet.create({
     movieTitle: { fontSize: 16, fontWeight: 'bold' },
     additionalDetails: { marginTop: 5 },
     movieRating: { fontSize: 14, fontWeight: 'bold', color: '#555' },
-    moviePlot: { fontSize: 12, color: '#555', marginTop: 2 },
-    movieGenre: { fontSize: 12, color: '#555', marginTop: 2 },
-    movieLanguage: { fontSize: 12, color: '#555', marginTop: 2 },
-    addButton: { padding: 10, backgroundColor: '#fff', borderRadius: 5 },
-    showMoreButton: { padding: 10, backgroundColor: '#f1f1f1', borderRadius: 5, marginLeft: 5 },
+    moviePlot: { fontSize: 12, color: '#777' },
+    movieGenre: { fontSize: 12, color: '#777' },
+    movieLanguage: { fontSize: 12, color: '#777' },
+    addButton: { padding: 10 },
+    showMoreButton: { padding: 10 },
+    modalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' },
+    modalContent: { backgroundColor: 'white', padding: 20, width: 300, borderRadius: 10 },
+    modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
+    ratingSlider: { width: 250, height: 40, marginBottom: 10 },
+    selectedRatingText: { textAlign: 'center', marginBottom: 10 },
+    reviewInput: { borderBottomWidth: 1, marginBottom: 10, padding: 10, height: 80, textAlignVertical: 'top' },
 });
