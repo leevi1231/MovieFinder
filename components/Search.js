@@ -11,31 +11,9 @@ export default function Search({ currentUser }) {
     const [releaseYear, setReleaseYear] = useState('');
     const [movies, setMovies] = useState([]);
     const [expandedMovies, setExpandedMovies] = useState({});
-    const [likedMovies, setLikedMovies] = useState({});
     const [showOptions, setShowOptions] = useState(false);
+
     const API_KEY = process.env.EXPO_PUBLIC_API_KEY;
-
-    useEffect(() => {
-        if (currentUser && currentUser.id) {
-            fetchLikedMovies();
-        }
-    }, [currentUser]);
-
-    const fetchLikedMovies = async () => {
-        try {
-            const result = await db.runAsync(
-                `SELECT imdbID FROM liked_movies WHERE user_id = ?`,
-                [currentUser.id]
-            );
-            const likedMoviesMap = {};
-            result.rows.forEach((row) => {
-                likedMoviesMap[row.imdbID] = true;
-            });
-            setLikedMovies(likedMoviesMap);
-        } catch (error) {
-            Alert.alert('Error', 'Failed to fetch liked movies.');
-        }
-    };
 
     const searchMovies = async () => {
         if (searchQuery.trim() === '') {
@@ -58,33 +36,29 @@ export default function Search({ currentUser }) {
         }
     };
 
-    const toggleLikeMovie = async (movie) => {
+    const addMovieToLiked = async (movie) => {
         if (!currentUser || !currentUser.id) {
             Alert.alert('Error', 'User is not logged in.');
             return;
         }
+
         try {
-            if (likedMovies[movie.imdbID]) {
-                await db.runAsync(
-                    `DELETE FROM liked_movies WHERE user_id = ? AND imdbID = ?`,
-                    [currentUser.id, movie.imdbID]
-                );
-                setLikedMovies((prev) => {
-                    const updated = { ...prev };
-                    delete updated[movie.imdbID];
-                    return updated;
-                });
+            const result = await db.runAsync(
+                `INSERT OR IGNORE INTO liked_movies (user_id, imdbID, title, year, poster) 
+                 VALUES (?, ?, ?, ?, ?)`,
+                [currentUser.id, movie.imdbID, movie.Title, movie.Year, movie.Poster]
+            );
+
+            if (result.changes > 0) {
+                Alert.alert('Success', 'Movie added to your liked list!');
             } else {
-                await db.runAsync(
-                    `INSERT OR IGNORE INTO liked_movies (user_id, imdbID, title, year, poster) VALUES (?, ?, ?, ?, ?)`,
-                    [currentUser.id, movie.imdbID, movie.Title, movie.Year, movie.Poster]
-                );
-                setLikedMovies((prev) => ({ ...prev, [movie.imdbID]: true }));
+                Alert.alert('Info', 'You have already liked this movie.');
             }
         } catch (error) {
-            Alert.alert('Error', 'Failed to update liked movies.');
+            Alert.alert('Error', 'Failed to add movie to liked list.');
         }
     };
+
 
     const fetchMovieDetails = async (imdbID) => {
         try {
@@ -103,7 +77,6 @@ export default function Search({ currentUser }) {
 
     const renderMovieItem = ({ item }) => {
         const isExpanded = expandedMovies[item.imdbID];
-        const isLiked = likedMovies[item.imdbID];
 
         return (
             <View style={styles.movieItem}>
@@ -121,15 +94,12 @@ export default function Search({ currentUser }) {
                     )}
                 </View>
                 <TouchableOpacity
-                    style={styles.likeButton}
-                    onPress={() => toggleLikeMovie(item)}
+                    style={styles.addButton}
+                    onPress={() => addMovieToLiked(item)}
                 >
-                    <Ionicons
-                        name={isLiked ? 'heart' : 'heart-outline'}
-                        size={24}
-                        color='gray'
-                    />
+                    <Ionicons name="add" size={24} color="gray" />
                 </TouchableOpacity>
+
                 <TouchableOpacity
                     style={styles.showMoreButton}
                     onPress={() => fetchMovieDetails(item.imdbID)}
@@ -217,6 +187,6 @@ const styles = StyleSheet.create({
     moviePlot: { fontSize: 12, color: '#555', marginTop: 2 },
     movieGenre: { fontSize: 12, color: '#555', marginTop: 2 },
     movieLanguage: { fontSize: 12, color: '#555', marginTop: 2 },
-    likeButton: { padding: 10, backgroundColor: '#fff', borderRadius: 5 },
+    addButton: { padding: 10, backgroundColor: '#fff', borderRadius: 5 },
     showMoreButton: { padding: 10, backgroundColor: '#f1f1f1', borderRadius: 5, marginLeft: 5 },
 });

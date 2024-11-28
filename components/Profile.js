@@ -29,7 +29,7 @@ export default function Profile({ currentUser, onLogout, isOwnProfile }) {
                     }
 
                     const movieResults = await db.getAllAsync(
-                        'SELECT title, year, poster FROM liked_movies WHERE user_id = ?;',
+                        'SELECT title, year, poster, id FROM liked_movies WHERE user_id = ?;',
                         [currentUser.id]
                     );
                     setLikedMovies(movieResults);
@@ -66,6 +66,17 @@ export default function Profile({ currentUser, onLogout, isOwnProfile }) {
 
         if (!result.canceled) {
             setProfilePicture(result.assets[0].uri);
+        }
+    };
+
+    const handleRemoveMovie = async (movieId) => {
+        try {
+            await db.runAsync('DELETE FROM liked_movies WHERE id = ? AND user_id = ?;', [movieId, currentUser.id]);
+            setLikedMovies((prevMovies) => prevMovies.filter((movie) => movie.id !== movieId));
+            Alert.alert('Success', 'Movie removed from liked list.');
+        } catch (error) {
+            console.error('Error removing movie:', error);
+            Alert.alert('Error', 'Failed to remove movie.');
         }
     };
 
@@ -124,8 +135,15 @@ export default function Profile({ currentUser, onLogout, isOwnProfile }) {
                 renderItem={({ item }) => (
                     <View style={styles.movieItem}>
                         <Image source={{ uri: item.poster }} style={styles.poster} />
-                        <Text style={styles.movieTitle}>{item.title}</Text>
-                        <Text>{item.year}</Text>
+                        <View style={styles.movieDetails}>
+                            <Text style={styles.movieTitle}>{item.title}</Text>
+                            <Text>{item.year}</Text>
+                        </View>
+                        {isOwnProfile && (
+                            <TouchableOpacity onPress={() => handleRemoveMovie(item.id)} style={styles.removeButton}>
+                                <Text style={styles.removeButtonText}>Remove</Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
                 )}
                 keyExtractor={(item, index) => index.toString()}
@@ -137,9 +155,9 @@ export default function Profile({ currentUser, onLogout, isOwnProfile }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        alignItems: 'center',
         padding: 20,
         backgroundColor: '#fff',
+        alignItems: 'center',
     },
     logoutButton: {
         position: 'absolute',
@@ -151,7 +169,6 @@ const styles = StyleSheet.create({
     },
     logoutText: {
         color: '#fff',
-        fontSize: 16,
     },
     profilePicture: {
         width: 100,
@@ -171,9 +188,6 @@ const styles = StyleSheet.create({
         color: '#666',
         marginVertical: 10,
     },
-    bioInput: {
-        minHeight: 80,
-    },
     input: {
         borderWidth: 1,
         borderColor: '#ccc',
@@ -184,19 +198,29 @@ const styles = StyleSheet.create({
     },
     sectionTitle: {
         fontSize: 18,
-        marginVertical: 10,
     },
     movieItem: {
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 10,
+        padding: 10,
+        width: '100%',
     },
     movieTitle: {
         fontWeight: 'bold',
+        fontSize: 16,
     },
     poster: {
-        width: 50,
-        height: 75,
+        width: 70,
+        height: 105,
         marginRight: 10,
+    },
+    removeButton: {
+        backgroundColor: '#FF5733',
+        padding: 5,
+        borderRadius: 5,
+    },
+    removeButtonText: {
+        color: '#fff',
     },
 });
