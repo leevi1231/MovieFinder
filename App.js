@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { SafeAreaView, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
 import AuthenticationScreen from './components/AuthenticationScreen';
 import Search from './components/Search';
 import Profile from './components/Profile';
 import Explore from './components/Explore';
+
+import styles from './styles/styles';
 
 const Tab = createBottomTabNavigator();
 
@@ -35,10 +38,25 @@ export default function App() {
         <NavigationContainer>
             <Tab.Navigator
                 initialRouteName="Explore"
-                screenOptions={{
+                screenOptions={({ route }) => ({
                     headerShown: false,
                     tabBarStyle: styles.tabBar,
-                }}
+                    tabBarIcon: ({ color, size }) => {
+                        let iconName;
+
+                        if (route.name === 'Explore') {
+                            iconName = 'compass-outline';
+                        } else if (route.name === 'Search') {
+                            iconName = 'search-outline';
+                        } else if (route.name === 'Profile') {
+                            iconName = 'person-outline';
+                        }
+
+                        return <Ionicons name={iconName} size={size} color={color} />;
+                    },
+                    tabBarActiveTintColor: '#007aff',
+                    tabBarInactiveTintColor: 'gray',
+                })}
             >
                 <Tab.Screen name="Explore" component={Explore} />
                 <Tab.Screen name="Search">
@@ -51,11 +69,3 @@ export default function App() {
         </NavigationContainer>
     );
 }
-
-const styles = StyleSheet.create({
-    tabBar: {
-        backgroundColor: '#f8f8f8',
-        borderTopWidth: 1,
-        borderTopColor: '#ddd',
-    }
-});

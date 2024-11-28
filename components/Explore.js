@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, FlatList, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
+import { View, Text, TextInput, FlatList, TouchableOpacity, Image, Alert } from 'react-native';
 import * as SQLite from 'expo-sqlite';
 import { useFocusEffect } from '@react-navigation/native';
 import Profile from './Profile';
-import { Ionicons } from '@expo/vector-icons';
+import { AntDesign, Ionicons } from '@expo/vector-icons';
+
+import styles from '../styles/styles';
 
 const db = SQLite.openDatabaseSync('users.db');
 
@@ -46,12 +48,17 @@ export default function Explore() {
     const fetchTopRatedMovies = async () => {
         try {
             const result = await db.getAllAsync(
-                `SELECT title, imdbID, AVG(rating) as averageRating, COUNT(rating) as ratingCount, poster
-                 FROM rated_movies 
-                 GROUP BY imdbID 
-                 HAVING ratingCount > 1 
-                 ORDER BY averageRating DESC, ratingCount DESC 
-                 LIMIT 5;`
+                `SELECT 
+                    imdbID, 
+                    title, 
+                    poster, 
+                    AVG(rating) AS averageRating, 
+                    COUNT(rating) AS ratingCount
+                FROM rated_movies
+                WHERE rating IS NOT NULL
+                GROUP BY imdbID
+                ORDER BY averageRating DESC
+                LIMIT 5;`
             );
             setTopRatedMovies(result);
         } catch (error) {
@@ -79,19 +86,22 @@ export default function Explore() {
     };
 
     const renderUserItem = ({ item }) => (
-        <TouchableOpacity onPress={() => handleUserClick(item)} style={styles.userItem}>
+        <View style={styles.userItem}>
             <View style={styles.userDetails}>
                 <Image
                     source={item.profile_picture ? { uri: item.profile_picture } : require('./../assets/default-avatar.png')}
                     style={styles.profilePicture}
                 />
                 <View style={styles.userInfo}>
+                    <Text style={styles.display_name}>{item.display_name}</Text>
                     <Text style={styles.username}>@{item.username}</Text>
-                    <Text>{item.display_name}</Text>
                     {item.bio && <Text>{item.bio}</Text>}
                 </View>
             </View>
-        </TouchableOpacity>
+            <TouchableOpacity onPress={() => handleUserClick(item)} style={styles.eyeIcon}>
+                <Ionicons name="eye-outline" size={24} color="gray" />
+            </TouchableOpacity>
+        </View>
     );
 
     const renderMovieItem = ({ item }) => {
@@ -102,30 +112,32 @@ export default function Explore() {
         const emptyStars = 5 - fullStars - halfStar;
 
         return (
-            <View style={styles.movieItem}>
-                <View style={styles.movieDetails}>
-                    <Image source={{ uri: item.poster }} style={styles.moviePoster} />
-                    <View style={styles.movieText}>
-                        <Text style={styles.movieTitle}>{item.title}</Text>
-                        <View style={styles.stars}>
-                            {Array(fullStars).fill().map((_, index) => (
-                                <Ionicons key={`full-${index}`} name="star" size={18} color="#FFD700" />
-                            ))}
-                            {halfStar === 1 && <Ionicons name="star-half" size={18} color="#FFD700" />}
-                            {Array(emptyStars).fill().map((_, index) => (
-                                <Ionicons key={`empty-${index}`} name="star-outline" size={18} color="#FFD700" />
-                            ))}
+            <View>
+                <View style={styles.movieItem}>
+                    <View style={styles.movieDetails}>
+                        <Image source={{ uri: item.poster }} style={styles.moviePoster} />
+                        <View style={styles.movieText}>
+                            <Text style={styles.movieTitle}>{item.title}</Text>
+                            <View style={styles.stars}>
+                                {Array(fullStars).fill().map((_, index) => (
+                                    <Ionicons key={`full-${index}`} name="star" size={18} color="#FFD700" />
+                                ))}
+                                {halfStar === 1 && <Ionicons name="star-half" size={18} color="#FFD700" />}
+                                {Array(emptyStars).fill().map((_, index) => (
+                                    <Ionicons key={`empty-${index}`} name="star-outline" size={18} color="#FFD700" />
+                                ))}
+                            </View>
+                            <Text style={styles.ratingText}>Avg Rating: {rating.toFixed(2)}</Text>
+                            <Text style={styles.likes}>Ratings: {item.ratingCount}</Text>
                         </View>
-                        <Text style={styles.ratingText}>Avg Rating: {rating.toFixed(2)}</Text>
-                        <Text style={styles.likes}>Ratings: {item.ratingCount}</Text>
+                        <TouchableOpacity
+                            style={styles.showMoreButton}
+                            onPress={() => fetchMovieDetails(item.imdbID)}
+                        >
+                            <AntDesign name={isExpanded ? 'up' : 'down'} size={22} color="gray" />
+                        </TouchableOpacity>
                     </View>
                 </View>
-                <TouchableOpacity
-                    style={styles.showMoreButton}
-                    onPress={() => fetchMovieDetails(item.imdbID)}
-                >
-                    <Ionicons name={isExpanded ? 'arrow-up' : 'arrow-down'} size={24} color="gray" />
-                </TouchableOpacity>
                 {isExpanded && (
                     <View style={styles.movieDetailsExpanded}>
                         <Text>{isExpanded.Plot}</Text>
@@ -165,89 +177,3 @@ export default function Explore() {
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        marginTop: 20,
-        flex: 1,
-        padding: 20,
-        backgroundColor: '#fff',
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 5,
-        padding: 10,
-        marginBottom: 20,
-    },
-    sectionTitle: {
-        fontSize: 18,
-        marginVertical: 10,
-    },
-    userItem: {
-        padding: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: '#ccc',
-    },
-    userDetails: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    profilePicture: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        marginRight: 10,
-    },
-    userInfo: {
-        flexDirection: 'column',
-    },
-    username: {
-        fontWeight: 'bold',
-    },
-    movieItem: {
-        padding: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: '#ccc',
-    },
-    movieDetails: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    moviePoster: {
-        width: 60,
-        height: 90,
-        marginRight: 10,
-    },
-    movieText: {
-        flexDirection: 'column',
-    },
-    movieTitle: {
-        fontWeight: 'bold',
-        fontSize: 16,
-    },
-    stars: {
-        flexDirection: 'row',
-        marginVertical: 5,
-    },
-    ratingText: {
-        fontSize: 14,
-        color: '#555',
-        marginVertical: 5,
-    },
-    likes: {
-        fontSize: 14,
-        color: '#555',
-    },
-    showMoreButton: {
-        marginTop: 10,
-        padding: 5,
-    },
-    movieDetailsExpanded: {
-        paddingTop: 10,
-        paddingLeft: 5,
-        paddingBottom: 10,
-        borderTopWidth: 1,
-        borderTopColor: '#ccc',
-    },
-});

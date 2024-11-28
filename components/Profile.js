@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, Image, FlatList, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, Button, Image, FlatList, TouchableOpacity, Alert } from 'react-native';
 import * as SQLite from 'expo-sqlite';
 import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+import { AntDesign, Ionicons } from '@expo/vector-icons';
+
+import styles from '../styles/styles';
 
 const db = SQLite.openDatabaseSync('users.db');
 
@@ -89,7 +91,7 @@ export default function Profile({ currentUser, onLogout, isOwnProfile }) {
         const fullStars = Math.floor(rating);
         const halfStar = rating % 1 >= 0.5 ? 1 : 0;
         const emptyStars = 5 - fullStars - halfStar;
-    
+
         return (
             <View style={styles.stars}>
                 {Array(fullStars).fill().map((_, index) => (
@@ -102,7 +104,7 @@ export default function Profile({ currentUser, onLogout, isOwnProfile }) {
             </View>
         );
     };
-    
+
 
     return (
         <View style={styles.container}>
@@ -138,7 +140,7 @@ export default function Profile({ currentUser, onLogout, isOwnProfile }) {
                     multiline
                 />
             )}
-            
+
             {isOwnProfile && (
                 <Button title={isEditing ? "Save Profile" : "Edit Profile"} onPress={() => {
                     if (isEditing) {
@@ -148,22 +150,24 @@ export default function Profile({ currentUser, onLogout, isOwnProfile }) {
                     }
                 }} />
             )}
-            
+
             <Text style={styles.sectionTitle}>Rated Movies:</Text>
             <FlatList
                 data={ratedMovies}
                 renderItem={({ item }) => (
                     <View style={styles.movieItem}>
                         <Image source={{ uri: item.poster }} style={styles.poster} />
-                        <View style={styles.movieDetails}>
+                        <View style={styles.textContainer}>
+                        <View style={styles.movieDetailsProfile}>
                             <Text style={styles.movieTitle}>{item.title}</Text>
                             <Text>{item.year}</Text>
                             {renderRatingStars(item.rating)}
                             {item.review && <Text style={styles.reviewText}>Review: {item.review}</Text>}
                         </View>
+                        </View>
                         {isOwnProfile && (
                             <TouchableOpacity onPress={() => handleRemoveRating(item.id)} style={styles.removeButton}>
-                                <Text style={styles.removeButtonText}>Remove Rating</Text>
+                                <AntDesign name="delete" size={22} color="gray" />
                             </TouchableOpacity>
                         )}
                     </View>
@@ -173,84 +177,3 @@ export default function Profile({ currentUser, onLogout, isOwnProfile }) {
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 20,
-        backgroundColor: '#fff',
-        alignItems: 'center',
-    },
-    logoutButton: {
-        position: 'absolute',
-        top: 20,
-        left: 20,
-        padding: 10,
-        backgroundColor: '#007BFF',
-        borderRadius: 5,
-    },
-    logoutText: {
-        color: '#fff',
-    },
-    profilePicture: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
-    },
-    displayName: {
-        fontSize: 24,
-        fontWeight: 'bold',
-    },
-    username: {
-        fontSize: 18,
-        color: '#888',
-    },
-    bio: {
-        fontSize: 16,
-        color: '#666',
-        marginVertical: 10,
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: '#ccc',
-        padding: 10,
-        width: '100%',
-        marginBottom: 10,
-        borderRadius: 5,
-    },
-    sectionTitle: {
-        fontSize: 18,
-    },
-    movieItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 10,
-        padding: 10,
-        width: '100%',
-    },
-    movieTitle: {
-        fontWeight: 'bold',
-        fontSize: 16,
-    },
-    poster: {
-        width: 70,
-        height: 105,
-        marginRight: 10,
-    },
-    removeButton: {
-        backgroundColor: '#FF5733',
-        padding: 5,
-        borderRadius: 5,
-    },
-    removeButtonText: {
-        color: '#fff',
-    },
-    reviewText: {
-        fontStyle: 'italic',
-        color: '#666',
-    },
-    stars: {
-        flexDirection: 'row',
-        fontSize: 18,
-    },
-});

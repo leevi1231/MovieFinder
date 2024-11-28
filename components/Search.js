@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { View, TextInput, Button, FlatList, Text, Alert, Image, TouchableOpacity, Modal, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, TextInput, Button, FlatList, Text, Alert, Image, TouchableOpacity, Modal } from 'react-native';
 import * as SQLite from 'expo-sqlite';
-import { Ionicons } from '@expo/vector-icons';
+import AntDesign from '@expo/vector-icons/AntDesign';
 import Slider from '@react-native-community/slider';
+
+import styles from '../styles/styles';
 
 const db = SQLite.openDatabaseSync('users.db');
 
@@ -98,10 +100,8 @@ export default function Search({ currentUser }) {
                     <Text>{item.Year}</Text>
                     {isExpanded && (
                         <View style={styles.additionalDetails}>
-                            <Text style={styles.movieRating}>Rating: {isExpanded.Rating}</Text>
                             <Text style={styles.moviePlot}>{isExpanded.Plot}</Text>
                             <Text style={styles.movieGenre}>Genre: {isExpanded.Genre}</Text>
-                            <Text style={styles.movieLanguage}>Language: {isExpanded.Language}</Text>
                         </View>
                     )}
                 </View>
@@ -112,16 +112,16 @@ export default function Search({ currentUser }) {
                         setRatingModalVisible(true);
                     }}
                 >
-                    <Ionicons name="add" size={24} color="gray" />
+                    <AntDesign name="plus" size={24} color="gray" />
                 </TouchableOpacity>
 
                 <TouchableOpacity
                     style={styles.showMoreButton}
                     onPress={() => fetchMovieDetails(item.imdbID)}
                 >
-                    <Ionicons
-                        name={isExpanded ? 'arrow-up' : 'arrow-down'}
-                        size={24}
+                    <AntDesign
+                        name={isExpanded ? 'up' : 'down'}
+                        size={22}
                         color="gray"
                     />
                 </TouchableOpacity>
@@ -132,7 +132,7 @@ export default function Search({ currentUser }) {
     return (
         <View style={styles.container}>
             <TextInput
-                style={styles.searchInput}
+                style={styles.input}
                 placeholder="Search for a movie or series..."
                 value={searchQuery}
                 onChangeText={setSearchQuery}
@@ -152,26 +152,24 @@ export default function Search({ currentUser }) {
                         onChangeText={setReleaseYear}
                         keyboardType="numeric"
                     />
-                    <View style={styles.typeToggleContainer}>
-                        <TouchableOpacity
-                            style={[
-                                styles.typeToggleButton,
-                                searchType === 'movie' && styles.selectedType,
-                            ]}
-                            onPress={() => setSearchType('movie')}
-                        >
-                            <Text>Movie</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[
-                                styles.typeToggleButton,
-                                searchType === 'series' && styles.selectedType,
-                            ]}
-                            onPress={() => setSearchType('series')}
-                        >
-                            <Text>Series</Text>
-                        </TouchableOpacity>
-                    </View>
+                    <TouchableOpacity
+                        style={[
+                            styles.typeToggleButton,
+                            searchType === 'movie' && styles.selectedType,
+                        ]}
+                        onPress={() => setSearchType('movie')}
+                    >
+                        <Text>Movie</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[
+                            styles.typeToggleButton,
+                            searchType === 'series' && styles.selectedType,
+                        ]}
+                        onPress={() => setSearchType('series')}
+                    >
+                        <Text>Series</Text>
+                    </TouchableOpacity>
                 </View>
             )}
             <Button title="Search" onPress={searchMovies} />
@@ -217,31 +215,3 @@ export default function Search({ currentUser }) {
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: { marginTop: 50, flex: 1, padding: 10 },
-    searchInput: { borderBottomWidth: 1, marginBottom: 10, padding: 10 },
-    moreOptionsButton: { marginTop: 10 },
-    optionsContainer: { marginTop: 10 },
-    yearInput: { borderBottomWidth: 1, marginBottom: 10, padding: 10 },
-    typeToggleContainer: { flexDirection: 'row', marginBottom: 10 },
-    typeToggleButton: { flex: 1, padding: 10, backgroundColor: '#f1f1f1', alignItems: 'center' },
-    selectedType: { backgroundColor: '#007BFF' },
-    movieItem: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
-    poster: { width: 50, height: 75, marginRight: 10 },
-    textContainer: { flex: 1 },
-    movieTitle: { fontSize: 16, fontWeight: 'bold' },
-    additionalDetails: { marginTop: 5 },
-    movieRating: { fontSize: 14, fontWeight: 'bold', color: '#555' },
-    moviePlot: { fontSize: 12, color: '#777' },
-    movieGenre: { fontSize: 12, color: '#777' },
-    movieLanguage: { fontSize: 12, color: '#777' },
-    addButton: { padding: 10 },
-    showMoreButton: { padding: 10 },
-    modalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' },
-    modalContent: { backgroundColor: 'white', padding: 20, width: 300, borderRadius: 10 },
-    modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
-    ratingSlider: { width: 250, height: 40, marginBottom: 10 },
-    selectedRatingText: { textAlign: 'center', marginBottom: 10 },
-    reviewInput: { borderBottomWidth: 1, marginBottom: 10, padding: 10, height: 80, textAlignVertical: 'top' },
-});
