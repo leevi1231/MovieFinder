@@ -58,9 +58,6 @@ const styles = StyleSheet.create({
         height: 75,
         marginRight: 10,
     },
-    textContainer: {
-        flex: 1,
-    },
     movieTitle: {
         fontSize: 16,
         fontWeight: 'bold',
@@ -90,7 +87,7 @@ const styles = StyleSheet.create({
         padding: 10,
     },
     showMoreButton: {
-        padding: 10,
+        padding: 5,
     },
     modalContainer: {
         flex: 1,
@@ -139,6 +136,10 @@ const styles = StyleSheet.create({
         width: 100,
         height: 100,
         borderRadius: 50,
+    },
+    profileContainer: {
+        flex: 1,
+        alignItems: 'center',
     },
     displayName: {
         fontSize: 24,
@@ -200,11 +201,7 @@ const styles = StyleSheet.create({
         padding: 5,
     },
     movieDetails: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    movieDetailsProfile: {
-        flexDirection: 'column',
+        flex: 1,
     },
     moviePoster: {
         width: 60,
@@ -231,9 +228,6 @@ const styles = StyleSheet.create({
         color: '#555',
     },
     showMoreButtonSmall: {
-        position: 'absolute',
-        top: 10,
-        right: 10,
         padding: 5,
     },
     movieDetailsExpanded: {

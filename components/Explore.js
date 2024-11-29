@@ -114,9 +114,8 @@ export default function Explore() {
         return (
             <View>
                 <View style={styles.movieItem}>
-                    <View style={styles.movieDetails}>
                         <Image source={{ uri: item.poster }} style={styles.moviePoster} />
-                        <View style={styles.movieText}>
+                        <View style={styles.movieDetails}>
                             <Text style={styles.movieTitle}>{item.title}</Text>
                             <View style={styles.stars}>
                                 {Array(fullStars).fill().map((_, index) => (
@@ -136,7 +135,6 @@ export default function Explore() {
                         >
                             <AntDesign name={isExpanded ? 'up' : 'down'} size={22} color="gray" />
                         </TouchableOpacity>
-                    </View>
                 </View>
                 {isExpanded && (
                     <View style={styles.movieDetailsExpanded}>

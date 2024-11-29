@@ -95,7 +95,7 @@ export default function Search({ currentUser }) {
         return (
             <View style={styles.movieItem}>
                 <Image source={{ uri: item.Poster }} style={styles.poster} />
-                <View style={styles.textContainer}>
+                <View style={styles.movieDetails}>
                     <Text style={styles.movieTitle}>{item.Title}</Text>
                     <Text>{item.Year}</Text>
                     {isExpanded && (

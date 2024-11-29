@@ -112,35 +112,36 @@ export default function Profile({ currentUser, onLogout, isOwnProfile }) {
                 <Text style={styles.logoutText}>{isOwnProfile ? 'Logout' : 'Go Back'}</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={handlePickImage} disabled={!isEditing}>
-                <Image
-                    source={profilePicture ? { uri: profilePicture } : require('./../assets/default-avatar.png')}
-                    style={styles.profilePicture}
-                />
-            </TouchableOpacity>
-            {!isEditing ? (
-                <Text style={styles.displayName}>{displayName || ''}</Text>
-            ) : (
-                <TextInput
-                    style={styles.input}
-                    placeholder="Display Name"
-                    value={displayName}
-                    onChangeText={setDisplayName}
-                />
-            )}
-            <Text style={styles.username}>@{currentUser.username}</Text>
-            {!isEditing ? (
-                <Text style={styles.bio}>{bio || ''}</Text>
-            ) : (
-                <TextInput
-                    style={[styles.input, styles.bioInput]}
-                    placeholder="Bio"
-                    value={bio}
-                    onChangeText={setBio}
-                    multiline
-                />
-            )}
-
+            <View style={styles.profileContainer}>
+                <TouchableOpacity onPress={handlePickImage} disabled={!isEditing}>
+                    <Image
+                        source={profilePicture ? { uri: profilePicture } : require('./../assets/default-avatar.png')}
+                        style={styles.profilePicture}
+                    />
+                </TouchableOpacity>
+                {!isEditing ? (
+                    <Text style={styles.displayName}>{displayName || null}</Text>
+                ) : (
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Display Name"
+                        value={displayName}
+                        onChangeText={setDisplayName}
+                    />
+                )}
+                <Text style={styles.username}>@{currentUser.username}</Text>
+                {!isEditing ? (
+                    <Text style={styles.bio}>{bio || null}</Text>
+                ) : (
+                    <TextInput
+                        style={[styles.input, styles.bioInput]}
+                        placeholder="Bio"
+                        value={bio}
+                        onChangeText={setBio}
+                        multiline
+                    />
+                )}
+            </View>
             {isOwnProfile && (
                 <Button title={isEditing ? "Save Profile" : "Edit Profile"} onPress={() => {
                     if (isEditing) {
@@ -157,13 +158,11 @@ export default function Profile({ currentUser, onLogout, isOwnProfile }) {
                 renderItem={({ item }) => (
                     <View style={styles.movieItem}>
                         <Image source={{ uri: item.poster }} style={styles.poster} />
-                        <View style={styles.textContainer}>
-                        <View style={styles.movieDetailsProfile}>
+                        <View style={styles.movieDetails}>
                             <Text style={styles.movieTitle}>{item.title}</Text>
                             <Text>{item.year}</Text>
                             {renderRatingStars(item.rating)}
                             {item.review && <Text style={styles.reviewText}>Review: {item.review}</Text>}
-                        </View>
                         </View>
                         {isOwnProfile && (
                             <TouchableOpacity onPress={() => handleRemoveRating(item.id)} style={styles.removeButton}>
