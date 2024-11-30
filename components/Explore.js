@@ -50,21 +50,29 @@ export default function Explore() {
             const result = await db.getAllAsync(
                 `SELECT 
                     imdbID, 
-                    title, 
+                    title,
+                    year, 
                     poster, 
                     AVG(rating) AS averageRating, 
                     COUNT(rating) AS ratingCount
                 FROM rated_movies
                 WHERE rating IS NOT NULL
-                GROUP BY imdbID
-                ORDER BY averageRating DESC
-                LIMIT 5;`
+                GROUP BY imdbID`
             );
-            setTopRatedMovies(result);
+    
+            const sortedMovies = result.sort((a, b) => {
+                if (b.averageRating === a.averageRating) {
+                    return b.ratingCount - a.ratingCount;
+                }
+                return b.averageRating - a.averageRating;
+            });
+    
+            setTopRatedMovies(sortedMovies.slice(0, 5));
         } catch (error) {
             console.error('Error fetching top rated movies:', error);
         }
     };
+    
 
     const fetchMovieDetails = async (imdbID) => {
         try {
@@ -86,25 +94,27 @@ export default function Explore() {
     };
 
     const renderUserItem = ({ item }) => (
-        <View style={styles.userItem}>
+        <View style={styles.movieItem}>
             <View style={styles.userDetails}>
                 <Image
                     source={item.profile_picture ? { uri: item.profile_picture } : require('./../assets/default-avatar.png')}
-                    style={styles.profilePicture}
+                    style={styles.profilePictureSmall}
                 />
                 <View style={styles.userInfo}>
-                    <Text style={styles.display_name}>{item.display_name}</Text>
-                    <Text style={styles.username}>@{item.username}</Text>
-                    {item.bio && <Text>{item.bio}</Text>}
+                    <View style={{ flexDirection: 'row' }}>
+                        {item.display_name && <Text style={styles.display_name}>{item.display_name} </Text>}
+                        <Text style={styles.usernameSmall}>@{item.username}</Text>
+                    </View>
+                    {item.bio && <Text style={styles.defaultText}>{item.bio}</Text>}
                 </View>
             </View>
-            <TouchableOpacity onPress={() => handleUserClick(item)} style={styles.eyeIcon}>
-                <Ionicons name="eye-outline" size={24} color="gray" />
+            <TouchableOpacity onPress={() => handleUserClick(item)} style={styles.showMoreButton}>
+                <Ionicons name="eye-outline" size={24} color='rgba(179, 160, 137, 1)' />
             </TouchableOpacity>
         </View>
     );
 
-    const renderMovieItem = ({ item }) => {
+    const renderMovieItem = ({ item, index }) => {
         const isExpanded = expandedMovies[item.imdbID];
         const rating = item.averageRating;
         const fullStars = Math.floor(rating);
@@ -114,32 +124,40 @@ export default function Explore() {
         return (
             <View>
                 <View style={styles.movieItem}>
-                        <Image source={{ uri: item.poster }} style={styles.moviePoster} />
-                        <View style={styles.movieDetails}>
-                            <Text style={styles.movieTitle}>{item.title}</Text>
-                            <View style={styles.stars}>
-                                {Array(fullStars).fill().map((_, index) => (
-                                    <Ionicons key={`full-${index}`} name="star" size={18} color="#FFD700" />
-                                ))}
-                                {halfStar === 1 && <Ionicons name="star-half" size={18} color="#FFD700" />}
-                                {Array(emptyStars).fill().map((_, index) => (
-                                    <Ionicons key={`empty-${index}`} name="star-outline" size={18} color="#FFD700" />
-                                ))}
-                            </View>
-                            <Text style={styles.ratingText}>Avg Rating: {rating.toFixed(2)}</Text>
-                            <Text style={styles.likes}>Ratings: {item.ratingCount}</Text>
+                    <Image source={{ uri: item.poster }} style={styles.poster} />
+                    <View style={styles.movieDetails}>
+                        <Text style={styles.ratings}>#{index + 1}</Text>
+                        <Text style={styles.movieTitle}>{item.title}</Text>
+                        <Text style={styles.defaultText}>{item.year}</Text>
+
+                        <View style={styles.stars}>
+                            {Array(fullStars).fill().map((_, index) => (
+                                <Ionicons key={`full-${index}`} name="star" size={18} color="#FeD700" />
+                            ))}
+                            {halfStar === 1 && <Ionicons name="star-half" size={18} color="#FeD700" />}
+                            {Array(emptyStars).fill().map((_, index) => (
+                                <Ionicons key={`empty-${index}`} name="star-outline" size={18} color="#FeD700" />
+                            ))}
                         </View>
-                        <TouchableOpacity
-                            style={styles.showMoreButton}
-                            onPress={() => fetchMovieDetails(item.imdbID)}
-                        >
-                            <AntDesign name={isExpanded ? 'up' : 'down'} size={22} color="gray" />
-                        </TouchableOpacity>
+                    </View>
+                    <View style={styles.ratingContainer}>
+                        <Text style={styles.defaultText}>{rating.toFixed(2)} / 5.00</Text>
+                        <Text style={styles.ratings}>Ratings: {item.ratingCount}</Text>
+                    </View>
+                    <TouchableOpacity
+                        style={styles.showMoreButton}
+                        onPress={() => fetchMovieDetails(item.imdbID)}
+                    >
+                        <AntDesign name={isExpanded ? 'up' : 'down'} size={22} color='rgba(179, 160, 137, 1)' />
+                    </TouchableOpacity>
                 </View>
                 {isExpanded && (
                     <View style={styles.movieDetailsExpanded}>
-                        <Text>{isExpanded.Plot}</Text>
-                        <Text>Genre: {isExpanded.Genre}</Text>
+                        <Text style={styles.defaultText}>{isExpanded.Plot}</Text>
+                        <Text style={styles.ratings}>
+                            <Text style={{ fontWeight: 'bold', color: '#d27d5c' }}>Genre: </Text>
+                            {isExpanded.Genre}
+                        </Text>
                     </View>
                 )}
             </View>
@@ -152,24 +170,32 @@ export default function Explore() {
                 <Profile currentUser={selectedUser} isOwnProfile={false} onLogout={() => setSelectedUser(null)} />
             ) : (
                 <>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Search Users"
-                        value={searchTerm}
-                        onChangeText={setSearchTerm}
-                    />
-                    <Text style={styles.sectionTitle}>New Users:</Text>
-                    <FlatList
-                        data={filteredUsers}
-                        renderItem={renderUserItem}
-                        keyExtractor={(item) => item.id.toString()}
-                    />
-                    <Text style={styles.sectionTitle}>Top Rated Movies:</Text>
-                    <FlatList
-                        data={topRatedMovies}
-                        renderItem={renderMovieItem}
-                        keyExtractor={(item, index) => index.toString()}
-                    />
+                    <View style={styles.usersContainer}>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Search Users"
+                            placeholderTextColor='rgba(179, 160, 137, 0.5)'
+                            value={searchTerm}
+                            onChangeText={setSearchTerm}
+                            keyboardAppearance="dark"
+                        />
+                        <Text style={styles.sectionTitle}>New Users:</Text>
+                        <FlatList
+                            data={filteredUsers}
+                            renderItem={renderUserItem}
+                            showsVerticalScrollIndicator={false}
+                            keyExtractor={(item) => item.id.toString()}
+                        />
+                    </View>
+                    <View style={styles.movieContainer}>
+                        <Text style={styles.sectionTitle}>Highest Rated Movies:</Text>
+                        <FlatList
+                            data={topRatedMovies}
+                            renderItem={renderMovieItem}
+                            showsVerticalScrollIndicator={false}
+                            keyExtractor={(item, index) => index.toString()}
+                        />
+                    </View>
                 </>
             )}
         </View>

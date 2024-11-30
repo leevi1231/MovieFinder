@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
 import * as SQLite from 'expo-sqlite';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import styles from '../styles/styles';
 
@@ -91,35 +92,47 @@ export default function AuthenticationScreen({ onAuthenticated }) {
         }
     };
 
-    if (!db) {
-        return <Text>Loading...</Text>;
-    }
-
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>{isRegistering ? 'Register' : 'Log In'}</Text>
-            <TextInput
-                placeholder="Username"
-                style={styles.input}
-                value={username}
-                onChangeText={setUsername}
-            />
-            <TextInput
-                placeholder="Password"
-                style={styles.input}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-            />
-            {isRegistering ? (
-                <Button title="Register" onPress={handleRegister} />
-            ) : (
-                <Button title="Log In" onPress={handleLogin} />
-            )}
-            <Button
-                title={isRegistering ? 'Switch to Log In' : 'Switch to Register'}
-                onPress={() => setIsRegistering(!isRegistering)}
-            />
+            <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
+                <Text style={styles.title}>MovieFinder</Text>
+                <MaterialCommunityIcons name="movie-star" size={32} color='#d27d5c' />
+            </View>
+            <View style={styles.inputContainer}>
+                <TextInput
+                    placeholder="Username"
+                    style={styles.loginInput}
+                    value={username}
+                    onChangeText={setUsername}
+                    keyboardAppearance="dark"
+                />
+                <TextInput
+                    placeholder="Password"
+                    style={styles.loginInput}
+                    value={password}
+                    onChangeText={setPassword}
+                    keyboardAppearance="dark"
+                    secureTextEntry
+                />
+
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '80%', marginTop: 20 }}>
+                    {isRegistering ? (
+                        <TouchableOpacity onPress={handleRegister} style={styles.button}>
+                            <Text style={styles.buttonText}>Register</Text>
+                        </TouchableOpacity>
+                    ) : (
+                        <TouchableOpacity onPress={handleLogin} style={styles.button}>
+                            <Text style={styles.buttonText}>Log In</Text>
+                        </TouchableOpacity>
+                    )}
+                    <TouchableOpacity onPress={() => setIsRegistering(!isRegistering)} style={styles.button}>
+                        <Text style={styles.buttonText}>
+                            {isRegistering ? 'Switch to Log In' : 'Switch to Register'}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+
         </View>
     );
 }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SafeAreaView } from 'react-native';
+import { SafeAreaView, StatusBar } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -28,44 +28,51 @@ export default function App() {
 
     if (!isAuthenticated) {
         return (
-            <SafeAreaView style={{ flex: 1 }}>
+            <SafeAreaView style={styles.container}>
                 <AuthenticationScreen onAuthenticated={handleAuthenticated} />
             </SafeAreaView>
         );
     }
 
     return (
-        <NavigationContainer>
-            <Tab.Navigator
-                initialRouteName="Explore"
-                screenOptions={({ route }) => ({
-                    headerShown: false,
-                    tabBarStyle: styles.tabBar,
-                    tabBarIcon: ({ color, size }) => {
-                        let iconName;
+        <>
+            <StatusBar
+                barStyle="light-content"
+                translucent
+            />
 
-                        if (route.name === 'Explore') {
-                            iconName = 'compass-outline';
-                        } else if (route.name === 'Search') {
-                            iconName = 'search-outline';
-                        } else if (route.name === 'Profile') {
-                            iconName = 'person-outline';
-                        }
+            <NavigationContainer>
+                <Tab.Navigator
+                    initialRouteName="Explore"
+                    screenOptions={({ route }) => ({
+                        headerShown: false,
+                        tabBarStyle: styles.tabBar,
+                        tabBarIcon: ({ color, size }) => {
+                            let iconName;
 
-                        return <Ionicons name={iconName} size={size} color={color} />;
-                    },
-                    tabBarActiveTintColor: '#007aff',
-                    tabBarInactiveTintColor: 'gray',
-                })}
-            >
-                <Tab.Screen name="Explore" component={Explore} />
-                <Tab.Screen name="Search">
-                    {() => <Search currentUser={currentUser} />}
-                </Tab.Screen>
-                <Tab.Screen name="Profile">
-                    {() => <Profile currentUser={currentUser} isOwnProfile={true} onLogout={handleLogout} />}
-                </Tab.Screen>
-            </Tab.Navigator>
-        </NavigationContainer>
+                            if (route.name === 'Explore') {
+                                iconName = 'compass-outline';
+                            } else if (route.name === 'Search') {
+                                iconName = 'search-outline';
+                            } else if (route.name === 'Profile') {
+                                iconName = 'person-outline';
+                            }
+
+                            return <Ionicons name={iconName} size={size} color={color} />;
+                        },
+                        tabBarActiveTintColor: 'rgba(179, 160, 137, 1)',
+                        tabBarInactiveTintColor: 'rgba(179, 160, 137, 0.35)',
+                    })}
+                >
+                    <Tab.Screen name="Explore" component={Explore} />
+                    <Tab.Screen name="Search">
+                        {() => <Search currentUser={currentUser} />}
+                    </Tab.Screen>
+                    <Tab.Screen name="Profile">
+                        {() => <Profile currentUser={currentUser} isOwnProfile={true} onLogout={handleLogout} />}
+                    </Tab.Screen>
+                </Tab.Navigator>
+            </NavigationContainer>
+        </>
     );
 }

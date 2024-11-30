@@ -5,6 +5,7 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import Slider from '@react-native-community/slider';
 
 import styles from '../styles/styles';
+import { Ionicons } from '@expo/vector-icons';
 
 const db = SQLite.openDatabaseSync('users.db');
 
@@ -93,88 +94,118 @@ export default function Search({ currentUser }) {
         const isExpanded = expandedMovies[item.imdbID];
 
         return (
-            <View style={styles.movieItem}>
-                <Image source={{ uri: item.Poster }} style={styles.poster} />
-                <View style={styles.movieDetails}>
-                    <Text style={styles.movieTitle}>{item.Title}</Text>
-                    <Text>{item.Year}</Text>
-                    {isExpanded && (
-                        <View style={styles.additionalDetails}>
-                            <Text style={styles.moviePlot}>{isExpanded.Plot}</Text>
-                            <Text style={styles.movieGenre}>Genre: {isExpanded.Genre}</Text>
-                        </View>
-                    )}
-                </View>
-                <TouchableOpacity
-                    style={styles.addButton}
-                    onPress={() => {
-                        setSelectedMovie(item);
-                        setRatingModalVisible(true);
-                    }}
-                >
-                    <AntDesign name="plus" size={24} color="gray" />
-                </TouchableOpacity>
+            <>
+                <View style={styles.movieItem}>
+                    <Image source={{ uri: item.Poster }} style={styles.poster} />
+                    <View style={styles.movieDetails}>
+                        <Text style={styles.movieTitle}>{item.Title}</Text>
+                        <Text style={styles.defaultText}>{item.Year}</Text>
 
-                <TouchableOpacity
-                    style={styles.showMoreButton}
-                    onPress={() => fetchMovieDetails(item.imdbID)}
-                >
-                    <AntDesign
-                        name={isExpanded ? 'up' : 'down'}
-                        size={22}
-                        color="gray"
-                    />
-                </TouchableOpacity>
-            </View>
+                    </View>
+                    <TouchableOpacity
+                        style={styles.addButton}
+                        onPress={() => {
+                            setSelectedMovie(item);
+                            setRatingModalVisible(true);
+                        }}
+                    >
+                        <AntDesign name="plus" size={24} color='rgba(179, 160, 137, 1)' />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.showMoreButton}
+                        onPress={() => fetchMovieDetails(item.imdbID)}
+                    >
+                        <AntDesign
+                            name={isExpanded ? 'up' : 'down'}
+                            size={22}
+                            color='rgba(179, 160, 137, 1)'
+                        />
+                    </TouchableOpacity>
+                </View>
+                {isExpanded && (
+                    <View style={styles.movieDetailsExpanded}>
+                        <Text style={styles.defaultText}>{isExpanded.Plot}</Text>
+                        <Text style={styles.ratings}>
+                            <Text style={{ fontWeight: 'bold', color: '#d27d5c' }}>Genre: </Text>
+                            {isExpanded.Genre}
+                        </Text>
+                    </View>
+                )}
+            </>
         );
     };
 
     return (
         <View style={styles.container}>
-            <TextInput
-                style={styles.input}
-                placeholder="Search for a movie or series..."
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-            />
-            <TouchableOpacity
-                style={styles.moreOptionsButton}
-                onPress={() => setShowOptions((prev) => !prev)}
-            >
-                <Text>{showOptions ? 'Hide Options' : 'More Options'}</Text>
-            </TouchableOpacity>
+            <View style={styles.searchContainer}>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Type in a movie or series"
+                    placeholderTextColor='rgba(179, 160, 137, 0.5)'
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    keyboardAppearance="dark"
+                />
+                <TouchableOpacity
+                    style={styles.searchButton}
+                    onPress={searchMovies}
+                >
+                    <AntDesign style={{ marginRight: 3 }} name="search1" size={22} color='rgba(179, 160, 137, 1)' />
+                    <Text style={styles.buttonText}>Search</Text>
+                </TouchableOpacity>
+            </View>
+
             {showOptions && (
                 <View style={styles.optionsContainer}>
                     <TextInput
-                        style={styles.yearInput}
-                        placeholder="Release Year"
+                        style={styles.input}
+                        placeholder="Release Year (optional)"
+                        placeholderTextColor='rgba(179, 160, 137, 0.5)'
                         value={releaseYear}
                         onChangeText={setReleaseYear}
                         keyboardType="numeric"
+                        keyboardAppearance="dark"
                     />
                     <TouchableOpacity
                         style={[
                             styles.typeToggleButton,
                             searchType === 'movie' && styles.selectedType,
                         ]}
-                        onPress={() => setSearchType('movie')}
+                        onPress={() => setSearchType(searchType === 'movie' ? '' : 'movie')}
                     >
-                        <Text>Movie</Text>
+                        <Text style={[styles.togglebuttonText, searchType === 'movie' && styles.selectedText]}>Movie</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                         style={[
                             styles.typeToggleButton,
                             searchType === 'series' && styles.selectedType,
                         ]}
-                        onPress={() => setSearchType('series')}
+                        onPress={() => setSearchType(searchType === 'series' ? '' : 'series')}
                     >
-                        <Text>Series</Text>
+                        <Text style={[styles.togglebuttonText, searchType === 'series' && styles.selectedText]}>Series</Text>
                     </TouchableOpacity>
+
                 </View>
             )}
-            <Button title="Search" onPress={searchMovies} />
+
+            <TouchableOpacity
+                style={styles.moreOptionsButton}
+                onPress={() => setShowOptions((prev) => !prev)}
+            >
+                <View style={{ flexDirection: 'row' }}>
+                    <AntDesign
+                        name={showOptions ? 'up' : 'down'}
+                        size={18}
+                        color='rgba(179, 160, 137, 1)'
+                    />
+                    <Text style={[{ fontSize: 14 }, styles.defaultText]}>{showOptions ? ' Hide Options' : ' More Options'}</Text>
+                </View>
+            </TouchableOpacity>
+
             <FlatList
                 data={movies}
+                showsVerticalScrollIndicator={false}
                 renderItem={renderMovieItem}
                 keyExtractor={(item) => item.imdbID}
             />
@@ -187,7 +218,9 @@ export default function Search({ currentUser }) {
             >
                 <View style={styles.modalContainer}>
                     <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Rate Movie</Text>
+                        <Text style={styles.modalTitle}>
+                            Rate <Text style={{ fontWeight: 'bold' }}>'{selectedMovie ? selectedMovie.Title : 'Rate Movie'} ({selectedMovie ? selectedMovie.Year : ''})'</Text>:
+                        </Text>
                         <Slider
                             style={styles.ratingSlider}
                             minimumValue={0}
@@ -195,20 +228,30 @@ export default function Search({ currentUser }) {
                             step={0.5}
                             value={selectedRating}
                             onValueChange={(value) => setSelectedRating(value)}
-                            minimumTrackTintColor="#007BFF"
-                            maximumTrackTintColor="#d3d3d3"
-                            thumbTintColor="#007BFF"
+                            minimumTrackTintColor='rgba(179, 160, 137, 0.9)'
+                            maximumTrackTintColor='rgba(179, 160, 137, 0.2)'
+                            thumbTintColor='rgba(179, 160, 137, 1)'
                         />
                         <Text style={styles.selectedRatingText}>{selectedRating} ★</Text>
                         <TextInput
-                            style={styles.reviewInput}
+                            style={styles.input}
                             placeholder="Write a short review (optional)"
+                            placeholderTextColor='rgba(179, 160, 137, 0.5)'
                             value={review}
                             onChangeText={setReview}
+                            keyboardAppearance="dark"
                             multiline
                         />
-                        <Button title="Submit Rating" onPress={addMovieToRatings} />
-                        <Button title="Cancel" onPress={() => setRatingModalVisible(false)} />
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10, marginBottom: 15 }}>
+                            <TouchableOpacity style={styles.button} onPress={() => setRatingModalVisible(false)}>
+                                <Text style={styles.buttonText}>Cancel</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity style={styles.button} onPress={addMovieToRatings}>
+                                <Text style={styles.buttonText}>Submit Rating</Text>
+                            </TouchableOpacity>
+
+                        </View>
                     </View>
                 </View>
             </Modal>

@@ -72,19 +72,43 @@ export default function Profile({ currentUser, onLogout, isOwnProfile }) {
         }
     };
 
-    const handleRemoveRating = async (movieId) => {
-        try {
-            await db.runAsync('DELETE FROM rated_movies WHERE id = ? AND user_id = ?;', [movieId, currentUser.id]);
-            setRatedMovies((prevMovies) => prevMovies.filter((movie) => movie.id !== movieId));
-            Alert.alert('Success', 'Rating removed.');
-        } catch (error) {
-            console.error('Error removing rating:', error);
-            Alert.alert('Error', 'Failed to remove rating.');
-        }
+    const handleRemoveImage = () => {
+        Alert.alert(
+            'Confirm',
+            'Are you sure you want to remove your profile picture?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Remove',
+                    onPress: () => setProfilePicture(null),
+                    style: 'destructive',
+                },
+            ]
+        );
     };
 
-    const handleRemoveImage = () => {
-        setProfilePicture(null);
+    const handleRemoveRating = async (movieId) => {
+        Alert.alert(
+            'Confirm',
+            'Are you sure you want to delete this review?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Delete',
+                    onPress: async () => {
+                        try {
+                            await db.runAsync('DELETE FROM rated_movies WHERE id = ? AND user_id = ?;', [movieId, currentUser.id]);
+                            setRatedMovies((prevMovies) => prevMovies.filter((movie) => movie.id !== movieId));
+                            Alert.alert('Success', 'Review deleted.');
+                        } catch (error) {
+                            console.error('Error removing rating:', error);
+                            Alert.alert('Error', 'Failed to delete review.');
+                        }
+                    },
+                    style: 'destructive',
+                },
+            ]
+        );
     };
 
     const renderRatingStars = (rating) => {
@@ -105,12 +129,25 @@ export default function Profile({ currentUser, onLogout, isOwnProfile }) {
         );
     };
 
-
     return (
-        <View style={styles.container}>
-            <TouchableOpacity onPress={onLogout} style={styles.logoutButton}>
-                <Text style={styles.logoutText}>{isOwnProfile ? 'Logout' : 'Go Back'}</Text>
-            </TouchableOpacity>
+        <View style={isOwnProfile ? styles.container : styles.paddinglessContainer}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <TouchableOpacity onPress={onLogout} style={styles.button}>
+                    <Text style={styles.buttonText}>{isOwnProfile ? 'Logout' : 'Go Back'}</Text>
+                </TouchableOpacity>
+
+                {isOwnProfile && (
+                    <TouchableOpacity style={styles.button} onPress={() => {
+                        if (isEditing) {
+                            handleSaveProfile();
+                        } else {
+                            setIsEditing(true);
+                        }
+                    }}>
+                        <Text style={styles.buttonText}>{isEditing ? "Save Profile" : "Edit Profile"}</Text>
+                    </TouchableOpacity>
+                )}
+            </View>
 
             <View style={styles.profileContainer}>
                 <TouchableOpacity onPress={handlePickImage} disabled={!isEditing}>
@@ -119,60 +156,72 @@ export default function Profile({ currentUser, onLogout, isOwnProfile }) {
                         style={styles.profilePicture}
                     />
                 </TouchableOpacity>
-                {!isEditing ? (
-                    <Text style={styles.displayName}>{displayName || null}</Text>
-                ) : (
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Display Name"
-                        value={displayName}
-                        onChangeText={setDisplayName}
-                    />
-                )}
+                {
+                    !isEditing ? (
+                        displayName && <Text style={styles.displayName}>{displayName}</Text>
+                    ) : (
+                        <>
+                            {profilePicture && (
+                                <TouchableOpacity onPress={handleRemoveImage} style={[styles.button, {alignSelf: 'center'}]}>
+                                    <Text style={styles.buttonText}>Remove Avatar</Text>
+                                </TouchableOpacity>
+                            )}
+                            <TextInput
+                                style={styles.profileInput}
+                                placeholder="Display Name"
+                                value={displayName}
+                                onChangeText={setDisplayName}
+                            />
+                        </>
+                    )
+                }
                 <Text style={styles.username}>@{currentUser.username}</Text>
-                {!isEditing ? (
-                    <Text style={styles.bio}>{bio || null}</Text>
-                ) : (
-                    <TextInput
-                        style={[styles.input, styles.bioInput]}
-                        placeholder="Bio"
-                        value={bio}
-                        onChangeText={setBio}
-                        multiline
-                    />
-                )}
+                {
+                    !isEditing ? (
+                        bio && <Text style={styles.bio}>{bio}</Text>
+                    ) : (
+                        <TextInput
+                            style={styles.profileInput}
+                            placeholder="Bio"
+                            value={bio}
+                            onChangeText={setBio}
+                        />
+                    )
+                }
             </View>
-            {isOwnProfile && (
-                <Button title={isEditing ? "Save Profile" : "Edit Profile"} onPress={() => {
-                    if (isEditing) {
-                        handleSaveProfile();
-                    } else {
-                        setIsEditing(true);
-                    }
-                }} />
-            )}
 
-            <Text style={styles.sectionTitle}>Rated Movies:</Text>
-            <FlatList
-                data={ratedMovies}
-                renderItem={({ item }) => (
-                    <View style={styles.movieItem}>
-                        <Image source={{ uri: item.poster }} style={styles.poster} />
-                        <View style={styles.movieDetails}>
-                            <Text style={styles.movieTitle}>{item.title}</Text>
-                            <Text>{item.year}</Text>
-                            {renderRatingStars(item.rating)}
-                            {item.review && <Text style={styles.reviewText}>Review: {item.review}</Text>}
-                        </View>
-                        {isOwnProfile && (
-                            <TouchableOpacity onPress={() => handleRemoveRating(item.id)} style={styles.removeButton}>
-                                <AntDesign name="delete" size={22} color="gray" />
-                            </TouchableOpacity>
-                        )}
-                    </View>
-                )}
-                keyExtractor={(item) => item.id.toString()}
-            />
+            <View style={styles.movieContainer}>
+                <Text style={styles.sectionTitle}>
+                    {isOwnProfile ? 'Your ratings:' : `${currentUser.username}'s ratings:`}
+                </Text>
+
+                <FlatList
+                    data={ratedMovies}
+                    showsVerticalScrollIndicator={false}
+                    renderItem={({ item }) => (
+                        <>
+                            <View style={styles.movieItem}>
+                                <Image source={{ uri: item.poster }} style={styles.poster} />
+                                <View style={styles.movieDetails}>
+                                    <Text style={styles.movieTitle}>{item.title}</Text>
+                                    <Text style={styles.defaultText}>{item.year}</Text>
+                                    {renderRatingStars(item.rating)}
+                                    <Text style={styles.ratings}>{item.rating.toFixed(2)}</Text>
+                                </View>
+                                {isOwnProfile && (
+                                    <TouchableOpacity onPress={() => handleRemoveRating(item.id)} style={styles.showMoreButton}>
+                                        <AntDesign name="delete" size={22} color='rgba(179, 160, 137, 1)' />
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+                            {item.review && <Text style={styles.movieDetailsExpanded}>
+                                <Text style={{ fontWeight: 'bold', color: '#d27d5c' }}>Review: </Text>
+                                {item.review}</Text>}
+                        </>
+                    )}
+                    keyExtractor={(item) => item.id.toString()}
+                />
+            </View>
         </View>
     );
 }
