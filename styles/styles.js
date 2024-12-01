@@ -3,8 +3,6 @@ import { StyleSheet } from 'react-native';
 const styles = StyleSheet.create({
     tabBar: {
         backgroundColor: '#101010',
-        borderTopWidth: 1,
-        borderTopColor: '#202020',
     },
     defaultText: {
         color: '#E0C097',
@@ -18,7 +16,7 @@ const styles = StyleSheet.create({
     },
     paddinglessContainer: {
         flex: 1,
-        backgroundColor: '#1a1a1a'
+        backgroundColor: '#101010',
     },
     inputContainer: {
         justifyContent: 'center',

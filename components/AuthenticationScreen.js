@@ -101,6 +101,7 @@ export default function AuthenticationScreen({ onAuthenticated }) {
             <View style={styles.inputContainer}>
                 <TextInput
                     placeholder="Username"
+                    placeholderTextColor='rgba(179, 160, 137, 0.5)'
                     style={styles.loginInput}
                     value={username}
                     onChangeText={setUsername}
@@ -108,6 +109,7 @@ export default function AuthenticationScreen({ onAuthenticated }) {
                 />
                 <TextInput
                     placeholder="Password"
+                    placeholderTextColor='rgba(179, 160, 137, 0.5)'
                     style={styles.loginInput}
                     value={password}
                     onChangeText={setPassword}

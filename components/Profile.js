@@ -169,6 +169,7 @@ export default function Profile({ currentUser, onLogout, isOwnProfile }) {
                             <TextInput
                                 style={styles.profileInput}
                                 placeholder="Display Name"
+                                placeholderTextColor='rgba(179, 160, 137, 0.5)'
                                 value={displayName}
                                 onChangeText={setDisplayName}
                             />
@@ -183,6 +184,7 @@ export default function Profile({ currentUser, onLogout, isOwnProfile }) {
                         <TextInput
                             style={styles.profileInput}
                             placeholder="Bio"
+                            placeholderTextColor='rgba(179, 160, 137, 0.5)'
                             value={bio}
                             onChangeText={setBio}
                         />
